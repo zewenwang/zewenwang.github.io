@@ -1,0 +1,780 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic|Roboto Slab:300,300italic,400,400italic,700,700italic|Lobster Two:300,300italic,400,400italic,700,700italic|PT Mono:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Android,推送," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/img/favicon.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="为了提高用户体验，现在大多数的应用都会增加推送功能，目前主流的第三方推送有 个推、mi push、百度、Jpush、极光等，但是推送的到达率却是不尽人意的，拿个推而言，服务器这边统计的结果是到达率仅有90%(仅做参考)。当然了还有官方的推送Google Cloud Messaging，可惜在国内然并卵，暂不做讨论。 推">
+<meta name="keywords" content="Android,推送">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何提高推送的到达率">
+<meta property="og:url" content="https://blog.zewen.win/2017/01/10/如何提高推送的到达率/index.html">
+<meta property="og:site_name" content="不忘初心">
+<meta property="og:description" content="为了提高用户体验，现在大多数的应用都会增加推送功能，目前主流的第三方推送有 个推、mi push、百度、Jpush、极光等，但是推送的到达率却是不尽人意的，拿个推而言，服务器这边统计的结果是到达率仅有90%(仅做参考)。当然了还有官方的推送Google Cloud Messaging，可惜在国内然并卵，暂不做讨论。 推送到达率问题的解决是刻不容缓的，因为在目前互联网大用户量的场景下，10%的用户数">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://blog.zewen.win/2017/01/10/如何提高推送的到达率/Sample_DaemonService.jpg">
+<meta property="og:updated_time" content="2017-01-10T15:27:19.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="如何提高推送的到达率">
+<meta name="twitter:description" content="为了提高用户体验，现在大多数的应用都会增加推送功能，目前主流的第三方推送有 个推、mi push、百度、Jpush、极光等，但是推送的到达率却是不尽人意的，拿个推而言，服务器这边统计的结果是到达率仅有90%(仅做参考)。当然了还有官方的推送Google Cloud Messaging，可惜在国内然并卵，暂不做讨论。 推送到达率问题的解决是刻不容缓的，因为在目前互联网大用户量的场景下，10%的用户数">
+<meta name="twitter:image" content="https://blog.zewen.win/2017/01/10/如何提高推送的到达率/Sample_DaemonService.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"always"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '6358964774549587000',
+      author: '主编'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://blog.zewen.win/2017/01/10/如何提高推送的到达率/"/>
+
+
+
+
+
+  <title> 如何提高推送的到达率 | 不忘初心 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">不忘初心</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">有始有终，天道酬勤！</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://blog.zewen.win/2017/01/10/如何提高推送的到达率/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="skeeter">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/assets/img/portrait.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="不忘初心">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="不忘初心" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                如何提高推送的到达率
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-10T23:15:14+08:00">
+                2017-01-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+              <span class="post-meta-divider">|</span>
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/进阶/" itemprop="url" rel="index">
+                    <span itemprop="name">进阶</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>为了提高用户体验，现在大多数的应用都会增加推送功能，目前主流的第三方推送有 个推、mi push、百度、Jpush、极光等，但是<strong>推送的到达率却是不尽人意的</strong>，拿个推而言，服务器这边统计的结果是到达率仅有90%(仅做参考)。当然了还有官方的推送Google Cloud Messaging，可惜在国内然并卵，暂不做讨论。</p>
+<p><strong>推送到达率问题的解决是刻不容缓的</strong>，因为在目前互联网大用户量的场景下，10%的用户数还是相当大的。</p>
+<a id="more"></a>
+<h2 id="原因"><a href="#原因" class="headerlink" title="原因"></a>原因</h2><p>我们知道，推送的技术原理主要是保持网络的长连接，在TCP长连接建立成功的基础上，推送不能如期到达的原因主要和网络状况有关，比如网络慢、丢包等等，这个是所有网络访问遇到的问题，不是导致推送到达率如此低的主要原因。</p>
+<p>那么，其最主要原因是什么呢？显然是TCP长连接持续保持这个前提未能得到保证，也就是：<br><strong>推送时，移动端未在线</strong></p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>现在我们找到了其原因所在，那么要解决这个问题，就要从两方面入手：</p>
+<ul>
+<li>“不择手段”的保证移动端在线，保证TCP长连接持续建立</li>
+<li>缓存推送消息，用户上线后重新发送</li>
+</ul>
+<h2 id="保证移动端在线"><a href="#保证移动端在线" class="headerlink" title="保证移动端在线"></a>保证移动端在线</h2><p>其实也就是我们常说的<strong>进程保活</strong>，可以创建一个幽灵进程进行保活操作，也可以直接用应用主进程进行保活，用这个进程中建立TCP连接，保证其存活的最大时长。方案主要以下几种：</p>
+<ul>
+<li>利用系统广播拉起应用，包括系统广播和同系列应用广播</li>
+<li>启动前台service，由于我们不想让用户感知到，所以应利用系统漏洞取消通知栏Notification的显示</li>
+</ul>
+<p><strong>注意：</strong><br>保证移动端在线确实能有效的提高推送的到达率，但是需要注意频繁的唤醒应用会导致应用耗电量的增加，所以要把握一定的度。</p>
+<h3 id="广播唤醒"><a href="#广播唤醒" class="headerlink" title="广播唤醒"></a>广播唤醒</h3><h4 id="利用系统广播"><a href="#利用系统广播" class="headerlink" title="利用系统广播"></a>利用系统广播</h4><p>监听系统事件广播来唤醒应用，常用的广播有：</p>
+<ul>
+<li>开机，<code>ACTION_BOOT_COMPLETED</code></li>
+<li>亮屏，<code>ACTION_SCREEN_ON</code></li>
+<li>灭屏，<code>ACTION_SCREEN_OFF</code></li>
+<li>插拔有线耳机，<code>ACTION_HEADSET_PLUG</code></li>
+<li>电量充足，<code>ACTION_BATTERY_OK</code></li>
+</ul>
+<p><strong>注意：</strong></p>
+<ul>
+<li>部分机型可能对开机广播做了限制，所以可能收不到开机广播</li>
+<li><code>ACTION_SCREEN_ON</code>、<code>ACTION_SCREEN_OFF</code>、<code>ACTION_HEADSET_PLUG</code>广播只能在代码里注册，当app完全退出后就收不到这个广播了</li>
+</ul>
+<h4 id="不同的app进程，用广播相互唤醒"><a href="#不同的app进程，用广播相互唤醒" class="headerlink" title="不同的app进程，用广播相互唤醒"></a>不同的app进程，用广播相互唤醒</h4><ul>
+<li>嵌入第三方SDK会唤醒相应的app进程，比如<ul>
+<li>微信的SDK会唤醒微信应用，支付宝支付的SDK会唤醒支付宝SDK</li>
+<li>个推SDK会唤醒其他嵌入个推SDK的应用</li>
+</ul>
+</li>
+<li>App会唤醒同公司的其他app，比如：支付宝、天猫、淘宝、UC等阿里系的应用，打开其中一款就有可能顺便唤醒其他几款应用</li>
+</ul>
+<h3 id="前台service"><a href="#前台service" class="headerlink" title="前台service"></a>前台service</h3><p>该方案是应用范围最最广泛的一种手段，主要是启动一个前台service，并利用系统漏洞避免其在通知栏处显示Notification。这样既能保证进程的优先级高于普通后台进程，又将用户感知降到最低。</p>
+<p><strong>思路：</strong></p>
+<ul>
+<li>API &lt; 18时，启动前台Service时直接传入<code>new Notification()</code></li>
+<li>API &gt;= 18，同时启动两个id相同并传入<code>new Notification()</code>的前台Service，然后再将后启动的Service做stop处理</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DaemonService</span> <span class="keyword">extends</span> <span class="title">Service</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> DAEMON_SERVICE_ID = <span class="number">123456789</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">boolean</span> mAlive = <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate();</span><br><span class="line">        mAlive = <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">onStartCommand</span><span class="params">(Intent intent, <span class="keyword">int</span> flags, <span class="keyword">int</span> startId)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (Build.VERSION.SDK_INT &lt; Build.VERSION_CODES.JELLY_BEAN_MR2) &#123;</span><br><span class="line">            <span class="comment">// API &lt; 18时，直接传入new Notification()</span></span><br><span class="line">            startForeground(DAEMON_SERVICE_ID, <span class="keyword">new</span> Notification());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// API &gt;= 18时，启动两个id相同的service，然后将后startForeground的service stopForeground/stop</span></span><br><span class="line">            startService(<span class="keyword">new</span> Intent(<span class="keyword">this</span>, DaemonInnerService.class));</span><br><span class="line">            startForeground(DAEMON_SERVICE_ID, <span class="keyword">new</span> Notification());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">super</span>.onStartCommand(intent, flags, startId);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onDestroy</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onDestroy();</span><br><span class="line">        mAlive = <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">isAlive</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> mAlive;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Nullable</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> IBinder <span class="title">onBind</span><span class="params">(Intent intent)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 用于API &gt;= 18时灰色保活Service</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">DaemonInnerService</span> <span class="keyword">extends</span> <span class="title">Service</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">onStartCommand</span><span class="params">(Intent intent, <span class="keyword">int</span> flags, <span class="keyword">int</span> startId)</span> </span>&#123;</span><br><span class="line">            startForeground(DAEMON_SERVICE_ID, <span class="keyword">new</span> Notification());</span><br><span class="line">            stopForeground(<span class="keyword">true</span>);</span><br><span class="line">            stopSelf();</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">super</span>.onStartCommand(intent, flags, startId);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Nullable</span></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> IBinder <span class="title">onBind</span><span class="params">(Intent intent)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>adb shell dumpsys activity services</code> 查看结果看到前台service已经启动，但在通知栏里并未显示<br><img src="Sample_DaemonService.jpg" alt="Sample_DaemonService.png"></p>
+<p>当然了，我们可以结合上面这两个方案：<br>创建一个广播<code>DaemonReceiver</code>，该广播监听某些系统事件广播，在广播处理中启动<code>DaemonService</code><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DaemonReceiver</span> <span class="keyword">extends</span> <span class="title">BroadcastReceiver</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onReceive</span><span class="params">(Context context, Intent intent)</span> </span>&#123;</span><br><span class="line">        startDaemonService(context);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">     <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">startDaemonService</span><span class="params">(Context context)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (DaemonService.isAlive()) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Intent serviceIntent = <span class="keyword">new</span> Intent(context, DaemonService.class);</span><br><span class="line">        context.startService(serviceIntent);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>鉴于当app被杀死后是监听不到系统广播的，而我们还需要保持<code>DaemonService</code>以确保推送TCP连接的建立，那我们可以在<code>DaemonService</code>的<code>onDestroy()</code>中启动一个新的service <code>DaemonReStartService</code>, 在<code>DaemonReStartService</code>中来重新启动<code>DaemonService</code>。</p>
+<p>Android中的应用就是这么一步步被玩的卡的不要不要的，所以请谨慎使用。</p>
+<h2 id="缓存推送消息"><a href="#缓存推送消息" class="headerlink" title="缓存推送消息"></a>缓存推送消息</h2><p>流程如下：</p>
+<ul>
+<li>客户端<ul>
+<li>收到推送后，发送回执消息给服务器，并存储到本地数据库</li>
+<li>收到的推送消息的消息ID已存储到数据库中时，不做处理并重发回执消息</li>
+</ul>
+</li>
+<li>服务器<ul>
+<li>如果客户端未在线，则将该条消息保存到数据库</li>
+<li>在客户端上线后，取出推送消息发给客户端并标记为已删除</li>
+<li>在取消息时注意同种类消息是否需要合并，考虑时效性只保留一定时间内的推送消息，合并或者超时后标记为已删除</li>
+<li>推送时在数据库里保存记录，收到客户端回执后将该条消息标记为已删除，超时未收到回执消息则重发消息</li>
+</ul>
+</li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>不以用户利益为出发点的手段都是耍流氓。<br>进程保活必定导致应用一直保持唤醒状态一直在后台运行，不可避免的导致耗电量增加；发送回执消息则会额外消耗用户流量(可以考虑一段时间内的回执消息合并后统一发送)，服务器保存每条推送记录可能会导致服务器压力过大。<br>所以，在尽可能保证用户到达率的情况下，也要考虑节能和流量，和使用设计模式一样，凡事皆有度，万事不可过。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/推送/" rel="tag"># 推送</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/11/23/details-about-viewstub/" rel="next" title="ViewStub 用法详解">
+                <i class="fa fa-chevron-left"></i> ViewStub 用法详解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/assets/img/portrait.jpg"
+               alt="skeeter" />
+          <p class="site-author-name" itemprop="name">skeeter</p>
+          <p class="site-description motion-element" itemprop="description">Your attitude, not your aptitude, will determine your altitude.</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">3</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/zewenwang" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://coding.net/u/zewenwang/project" target="_blank" title="Coding">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  Coding
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://www.jianshu.com/users/110b5792b24c/latest_articles" target="_blank" title="简书">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  简书
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#原因"><span class="nav-number">1.</span> <span class="nav-text">原因</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解决方案"><span class="nav-number">2.</span> <span class="nav-text">解决方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#保证移动端在线"><span class="nav-number">3.</span> <span class="nav-text">保证移动端在线</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#广播唤醒"><span class="nav-number">3.1.</span> <span class="nav-text">广播唤醒</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#利用系统广播"><span class="nav-number">3.1.1.</span> <span class="nav-text">利用系统广播</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#不同的app进程，用广播相互唤醒"><span class="nav-number">3.1.2.</span> <span class="nav-text">不同的app进程，用广播相互唤醒</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#前台service"><span class="nav-number">3.2.</span> <span class="nav-text">前台service</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#缓存推送消息"><span class="nav-number">4.</span> <span class="nav-text">缓存推送消息</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">skeeter</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>
